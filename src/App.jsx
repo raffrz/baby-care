@@ -67,6 +67,7 @@ function App() {
   const [time, setTime] = useState(0); // Tempo decorrido em segundos
   const [warningMessage, setWarningMessage] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [note, setNote] = useState(''); // Anotações sobre a mamada atual
 
   const timerRef = useRef(null);
   const startTimeRef = useRef(0);
@@ -141,6 +142,7 @@ function App() {
       duration: durationSeconds,
       startTime: startStr,
       endTime: endStr,
+      note: note.trim(),
     };
 
     const newHistory = [newRecord, ...history];
@@ -155,6 +157,7 @@ function App() {
     setTime(0);
     setActiveBreast(null);
     setWarningMessage('');
+    setNote('');
   };
 
   const handleResetTimer = () => {
@@ -163,6 +166,7 @@ function App() {
       setTime(0);
       setActiveBreast(null);
       setWarningMessage('');
+      setNote('');
     }
   };
 
@@ -215,9 +219,10 @@ function App() {
   const getNextFeedingInfo = () => {
     if (!lastFeeding) return null;
 
-    const lastEnd = new Date(lastFeeding.endTime);
-    // Exatamente 3 horas após o término da última mamada
-    const nextTime = new Date(lastEnd.getTime() + 3 * 60 * 60 * 1000);
+    // Recomendação pediátrica: contagem do intervalo a partir do INÍCIO da última mamada
+    const lastStart = new Date(lastFeeding.startTime);
+    // Prevista exatamente para 3 horas após o início da última mamada
+    const nextTime = new Date(lastStart.getTime() + 3 * 60 * 60 * 1000);
     
     const diffMs = nextTime.getTime() - currentTime.getTime();
     const diffMins = Math.round(diffMs / 60000);
@@ -307,6 +312,21 @@ function App() {
             </div>
           </div>
 
+          {/* Campo de Anotações (visível durante a sessão ativa) */}
+          {(isRunning || time > 0) && (
+            <div className="note-input-wrapper">
+              <label htmlFor="feeding-note" className="note-label">Anotações da Mamada</label>
+              <textarea
+                id="feeding-note"
+                className="note-textarea"
+                placeholder="Ex: Teve boa pega, dormiu no final, usou bico de silicone..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                maxLength={200}
+              />
+            </div>
+          )}
+
           {/* Ações do Timer */}
           <div className="timer-actions">
             {!isRunning && time === 0 ? (
@@ -375,6 +395,11 @@ function App() {
                 <div className="widget-details">
                   <p>Terminou às <strong>{formatTimeOfDay(lastFeeding.endTime)}</strong> ({formatDateLabel(lastFeeding.endTime)})</p>
                   <p>Duração: <strong>{formatShortDuration(lastFeeding.duration)}</strong></p>
+                  {lastFeeding.note && (
+                    <div className="widget-note-preview">
+                      <strong>Obs:</strong> {lastFeeding.note}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -399,7 +424,7 @@ function App() {
                   <p className={`countdown-badge ${nextFeeding.isOverdue ? 'overdue' : 'pending'}`}>
                     {nextFeeding.statusText}
                   </p>
-                  <p className="hint">Previsão baseada no intervalo ideal de 3h.</p>
+                  <p className="hint">Previsão baseada no início da última mamada (3h).</p>
                 </div>
               </div>
             ) : (
@@ -444,6 +469,12 @@ function App() {
                     <div className="item-duration">
                       <span>Duração: <strong>{formatShortDuration(record.duration)}</strong></span>
                     </div>
+                    {record.note && (
+                      <div className="item-note-display">
+                        <span className="note-icon">📝</span>
+                        <span className="note-text">{record.note}</span>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
