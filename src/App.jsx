@@ -44,6 +44,85 @@ const IconArrowRight = () => (
   </svg>
 );
 
+const IconEdit = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon-edit">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+
+// --- Funções Auxiliares do Perfil do Bebê ---
+const getAgeInDays = (birthDateString) => {
+  if (!birthDateString) return 0;
+  const birth = new Date(birthDateString);
+  const now = new Date();
+  const birthDateOnly = new Date(birth.getFullYear(), birth.getMonth(), birth.getDate());
+  const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffTime = nowDateOnly.getTime() - birthDateOnly.getTime();
+  return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+};
+
+const getRecommendedInterval = (ageInDays) => {
+  if (ageInDays <= 30) {
+    return 2.5; // 2h 30m - Recém-nascido
+  } else if (ageInDays <= 90) {
+    return 3.0; // 3h - 1 a 3 meses
+  } else if (ageInDays <= 180) {
+    return 3.5; // 3h 30m - 3 a 6 meses
+  } else {
+    return 4.0; // 4h - 6+ meses
+  }
+};
+
+const formatAge = (days, birthDateString) => {
+  if (!birthDateString) return '';
+  const birth = new Date(birthDateString);
+  const now = new Date();
+  if (birth > now) return 'Ainda não nasceu';
+  
+  if (days === 0) return 'Nasceu hoje!';
+  if (days < 7) {
+    return days === 1 ? '1 dia de vida' : `${days} dias de vida`;
+  }
+  const weeks = Math.floor(days / 7);
+  const remainingDays = days % 7;
+  if (days < 30) {
+    let text = weeks === 1 ? '1 semana' : `${weeks} semanas`;
+    if (remainingDays > 0) {
+      text += remainingDays === 1 ? ' e 1 dia' : ` e ${remainingDays} dias`;
+    }
+    return text + ' de vida';
+  }
+  const months = Math.floor(days / 30.4375);
+  const remainingDaysInMonth = Math.floor(days % 30.4375);
+  if (months < 12) {
+    let text = months === 1 ? '1 mês' : `${months} meses`;
+    if (remainingDaysInMonth >= 7) {
+      const w = Math.floor(remainingDaysInMonth / 7);
+      text += w === 1 ? ' e 1 semana' : ` e ${w} semanas`;
+    } else if (remainingDaysInMonth > 0) {
+      text += remainingDaysInMonth === 1 ? ' e 1 dia' : ` e ${remainingDaysInMonth} dias`;
+    }
+    return text + ' de vida';
+  }
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  let text = years === 1 ? '1 ano' : `${years} anos`;
+  if (remainingMonths > 0) {
+    text += remainingMonths === 1 ? ' e 1 mês' : ` e ${remainingMonths} meses`;
+  }
+  return text + ' de vida';
+};
+
+const formatInterval = (hours) => {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (m === 0) {
+    return h === 1 ? '1 hora' : `${h} horas`;
+  }
+  return `${h}h ${m}m`;
+};
+
 function App() {
   // --- Estados ---
   const [history, setHistory] = useState(() => {
@@ -62,6 +141,27 @@ function App() {
     return [];
   });
 
+  const [babyName, setBabyName] = useState(() => {
+    return localStorage.getItem('baby_care_name') || '';
+  });
+  const [babyBirthDate, setBabyBirthDate] = useState(() => {
+    return localStorage.getItem('baby_care_birthdate') || '';
+  });
+  const [useRecommendedInterval, setUseRecommendedInterval] = useState(() => {
+    const saved = localStorage.getItem('baby_care_use_recommended');
+    return saved !== 'false';
+  });
+  const [customInterval, setCustomInterval] = useState(() => {
+    const saved = localStorage.getItem('baby_care_custom_interval');
+    return saved ? parseFloat(saved) : 3.0;
+  });
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [tempName, setTempName] = useState('');
+  const [tempBirthDate, setTempBirthDate] = useState('');
+  const [tempUseRecommended, setTempUseRecommended] = useState(true);
+  const [tempCustomInterval, setTempCustomInterval] = useState(3.0);
+
   const [activeBreast, setActiveBreast] = useState(null); // 'Esquerda' | 'Direita' | null
   const [isRunning, setIsRunning] = useState(false);
   const [time, setTime] = useState(0); // Tempo decorrido em segundos
@@ -74,6 +174,11 @@ function App() {
 
   // Deriva o último registro do histórico
   const lastFeeding = history.length > 0 ? history[0] : null;
+
+  // Deriva dados do bebê e intervalo ativo
+  const ageInDays = babyBirthDate ? Math.max(0, getAgeInDays(babyBirthDate)) : 0;
+  const recommendedInterval = getRecommendedInterval(ageInDays);
+  const activeInterval = useRecommendedInterval ? recommendedInterval : customInterval;
 
   // --- Efeitos ---
   // Atualiza a hora atual a cada segundo (usado para o cálculo dinâmico da próxima mamada)
@@ -104,6 +209,33 @@ function App() {
   }, [isRunning]);
 
   // --- Ações ---
+  const handleEditProfile = () => {
+    setTempName(babyName);
+    setTempBirthDate(babyBirthDate);
+    setTempUseRecommended(useRecommendedInterval);
+    setTempCustomInterval(customInterval);
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    setBabyName(tempName);
+    setBabyBirthDate(tempBirthDate);
+    setUseRecommendedInterval(tempUseRecommended);
+    setCustomInterval(tempCustomInterval);
+
+    localStorage.setItem('baby_care_name', tempName);
+    localStorage.setItem('baby_care_birthdate', tempBirthDate);
+    localStorage.setItem('baby_care_use_recommended', tempUseRecommended.toString());
+    localStorage.setItem('baby_care_custom_interval', tempCustomInterval.toString());
+
+    setIsEditingProfile(false);
+  };
+
+  const handleCancelProfile = () => {
+    setIsEditingProfile(false);
+  };
+
   const handleStartTimer = () => {
     if (!activeBreast) {
       setWarningMessage('Por favor, selecione uma mama (Esquerda ou Direita) antes de iniciar!');
@@ -221,8 +353,8 @@ function App() {
 
     // Recomendação pediátrica: contagem do intervalo a partir do INÍCIO da última mamada
     const lastStart = new Date(lastFeeding.startTime);
-    // Prevista exatamente para 3 horas após o início da última mamada
-    const nextTime = new Date(lastStart.getTime() + 3 * 60 * 60 * 1000);
+    // Prevista para o intervalo selecionado após o início da última mamada
+    const nextTime = new Date(lastStart.getTime() + activeInterval * 60 * 60 * 1000);
     
     const diffMs = nextTime.getTime() - currentTime.getTime();
     const diffMins = Math.round(diffMs / 60000);
@@ -263,6 +395,138 @@ function App() {
       </header>
 
       <main className="app-main">
+        {/* Card: Perfil do Bebê */}
+        <section className="baby-profile-card card">
+          {!babyBirthDate && !isEditingProfile ? (
+            <div className="baby-profile-empty">
+              <div className="baby-profile-info">
+                <div className="baby-avatar-wrapper">
+                  <IconBaby />
+                </div>
+                <div className="baby-details">
+                  <h3 className="baby-name">Olá!</h3>
+                  <p className="baby-age">Configure o perfil do bebê para definir o intervalo de amamentação conforme o tempo de vida.</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-edit-profile"
+                onClick={handleEditProfile}
+              >
+                Configurar Perfil
+              </button>
+            </div>
+          ) : isEditingProfile ? (
+            <form onSubmit={handleSaveProfile} className="baby-profile-edit-form">
+              <h3 className="form-title">Editar Perfil do Bebê</h3>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="baby-name-input" className="form-label">Nome do Bebê</label>
+                  <input
+                    id="baby-name-input"
+                    type="text"
+                    className="form-input"
+                    placeholder="Ex: Lucas, Sofia"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    maxLength={30}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="baby-birth-input" className="form-label">Data de Nascimento</label>
+                  <input
+                    id="baby-birth-input"
+                    type="date"
+                    className="form-input"
+                    value={tempBirthDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setTempBirthDate(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="interval-settings-group">
+                <label className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    checked={tempUseRecommended}
+                    onChange={(e) => setTempUseRecommended(e.target.checked)}
+                  />
+                  <span className="form-label">Ajustar intervalo automaticamente por idade</span>
+                </label>
+
+                {tempUseRecommended && tempBirthDate && (
+                  <div className="recommended-preview-box">
+                    <span className="hint-label">
+                      Recomendado para a idade atual ({formatAge(Math.max(0, getAgeInDays(tempBirthDate)), tempBirthDate)}):
+                    </span>
+                    <strong className="recommended-val"> {formatInterval(getRecommendedInterval(Math.max(0, getAgeInDays(tempBirthDate))))}</strong>
+                  </div>
+                )}
+
+                {!tempUseRecommended && (
+                  <div className="form-group custom-interval-group">
+                    <label htmlFor="custom-interval-select" className="form-label">Intervalo Personalizado (horas)</label>
+                    <select
+                      id="custom-interval-select"
+                      className="form-select"
+                      value={tempCustomInterval}
+                      onChange={(e) => setTempCustomInterval(parseFloat(e.target.value))}
+                    >
+                      <option value="1.0">1h 00m</option>
+                      <option value="1.5">1h 30m</option>
+                      <option value="2.0">2h 00m</option>
+                      <option value="2.5">2h 30m</option>
+                      <option value="3.0">3h 00m</option>
+                      <option value="3.5">3h 30m</option>
+                      <option value="4.0">4h 00m</option>
+                      <option value="4.5">4h 30m</option>
+                      <option value="5.0">5h 00m</option>
+                      <option value="5.5">5h 30m</option>
+                      <option value="6.0">6h 00m</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="btn-cancel-profile" onClick={handleCancelProfile}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-save-profile">
+                  Salvar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="baby-profile-view">
+              <div className="baby-profile-info">
+                <div className="baby-avatar-wrapper">
+                  <IconBaby />
+                </div>
+                <div className="baby-details">
+                  <h3 className="baby-name">{babyName || 'Bebê'}</h3>
+                  <p className="baby-age">{formatAge(ageInDays, babyBirthDate)}</p>
+                  <div className="baby-interval-info">
+                    <span>Intervalo de amamentação: <strong>{formatInterval(activeInterval)}</strong></span>
+                    <span className={`interval-badge ${useRecommendedInterval ? 'recommended' : 'custom'}`}>
+                      {useRecommendedInterval ? 'Automático por idade' : 'Personalizado'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-edit-profile"
+                onClick={handleEditProfile}
+              >
+                <IconEdit /> Editar
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Painel de Controle Principal */}
         <section className="control-panel card">
           {warningMessage && (
@@ -424,7 +688,7 @@ function App() {
                   <p className={`countdown-badge ${nextFeeding.isOverdue ? 'overdue' : 'pending'}`}>
                     {nextFeeding.statusText}
                   </p>
-                  <p className="hint">Previsão baseada no início da última mamada (3h).</p>
+                  <p className="hint">Previsão baseada no início da última mamada ({formatInterval(activeInterval)}).</p>
                 </div>
               </div>
             ) : (

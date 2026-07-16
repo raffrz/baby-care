@@ -746,6 +746,298 @@ body {
   flex: 1;
 }
 
+/* Card de Perfil do Bebê */
+.baby-profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.baby-profile-empty, .baby-profile-view {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .baby-profile-empty, .baby-profile-view {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .baby-profile-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.baby-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.baby-avatar-wrapper {
+  background: var(--color-left-bg);
+  color: var(--color-left-accent);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.baby-avatar-wrapper svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--color-left-accent);
+}
+
+.baby-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .baby-details {
+    text-align: center;
+    align-items: center;
+  }
+}
+
+.baby-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.baby-age {
+  font-size: 0.88rem;
+  color: var(--text-light);
+  font-weight: 500;
+  margin: 0;
+}
+
+.baby-interval-info {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.interval-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.interval-badge.recommended {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.1);
+}
+
+.interval-badge.custom {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.1);
+}
+
+.btn-edit-profile {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-light);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-edit-profile svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-edit-profile:hover {
+  background: var(--color-neutral-btn);
+  color: var(--text-main);
+  border-color: var(--text-lighter);
+}
+
+/* Formulário de Edição do Perfil */
+.baby-profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.form-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 4px 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-align: left;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+  background-color: #ffffff;
+  transition: var(--transition);
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+.interval-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-color);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-left-accent);
+}
+
+.recommended-preview-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.recommended-val {
+  color: #166534;
+  background: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.custom-interval-group {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn-save-profile {
+  background: var(--color-left-accent);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-save-profile:hover {
+  background: #025a87;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-cancel-profile {
+  background: #f1f5f9;
+  color: var(--text-light);
+  border: none;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-cancel-profile:hover {
+  background: #e2e8f0;
+  color: var(--text-main);
+}
+
 /* Responsividade Geral */
 @media (max-width: 480px) {
   .app-container {
